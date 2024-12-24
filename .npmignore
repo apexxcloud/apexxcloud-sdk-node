@@ -1,0 +1,8 @@
+tests/
+examples/
+coverage/
+.github/
+.gitignore
+.eslintrc
+.prettierrc
+jest.config.js 
