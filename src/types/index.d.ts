@@ -56,7 +56,13 @@ declare module 'apexxcloud-sdk-node' {
     mimeType?: string;
   }
 
-  type SignedUrlType = 'upload' | 'delete' | 'start-multipart' | 'uploadpart' | 'completemultipart' | 'cancelmultipart';
+  type SignedUrlType =
+    | 'upload'
+    | 'delete'
+    | 'start-multipart'
+    | 'uploadpart'
+    | 'completemultipart'
+    | 'cancelmultipart';
 
   interface StorageSDK {
     files: {
@@ -79,10 +85,7 @@ declare module 'apexxcloud-sdk-node' {
         parts: Array<{ ETag: string; PartNumber: number }>,
         options: CompleteMultipartOptions
       ): Promise<any>;
-      cancelMultipartUpload(
-        uploadId: string,
-        options: CancelMultipartOptions
-      ): Promise<any>;
+      cancelMultipartUpload(uploadId: string, options: CancelMultipartOptions): Promise<any>;
     };
 
     bucket: {
