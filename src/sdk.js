@@ -199,6 +199,101 @@ class StorageSDK {
     const path = `/api/v1/files/list?${queryParams.toString()}`;
     return this.makeRequest('GET', path);
   }
+
+  async generateSignedUrl(type, options = {}) {
+    const timestamp = new Date().toISOString();
+    let path;
+    let method;
+    const queryParams = new URLSearchParams({
+      bucket_name: options.bucketName || this.config.defaultBucket,
+      region: options.region || this.config.region,
+    });
+
+    switch (type) {
+      case 'upload':
+        path = '/api/v1/files/upload';
+        method = 'POST';
+        queryParams.append('visibility', options.visibility || 'public');
+        break;
+
+      case 'delete':
+        if (!options.filePath) {
+          throw new Error('filePath is required for delete operation');
+        }
+        path = '/api/v1/files/delete';
+        method = 'DELETE';
+        queryParams.append('file_path', options.filePath);
+        break;
+
+      case 'start-multipart':
+        if (!options.fileName) {
+          throw new Error('fileName is required for start-multipart operation');
+        }
+        path = '/api/v1/files/multipart/start';
+        method = 'POST';
+        queryParams.append('filename', options.fileName);
+        queryParams.append('total_parts', options.totalParts || 1);
+        queryParams.append('mime_type', options.mimeType || 'application/octet-stream');
+        queryParams.append('visibility', options.visibility || 'public');
+        break;
+
+      case 'uploadpart':
+        if (!options.uploadId) {
+          throw new Error('uploadId is required for uploadpart operation');
+        }
+        if (!options.partNumber) {
+          throw new Error('partNumber is required for uploadpart operation');
+        }
+        if (!options.key) {
+          throw new Error('key is required for uploadpart operation');
+        }
+        if (!options.totalParts) {
+          throw new Error('totalParts is required for uploadpart operation');
+        }
+        path = `/api/v1/files/multipart/${options.uploadId}/upload`;
+        method = 'POST';
+        queryParams.append('part_number', options.partNumber);
+        queryParams.append('key', options.key);
+        queryParams.append('total_parts', options.totalParts);
+        break;
+
+      case 'completemultipart':
+        if (!options.uploadId) {
+          throw new Error('uploadId is required for completemultipart operation');
+        }
+        if (!options.fileName) {
+          throw new Error('fileName is required for completemultipart operation');
+        }
+        path = `/api/v1/files/multipart/${options.uploadId}/complete`;
+        method = 'POST';
+        queryParams.append('file_name', options.fileName);
+        break;
+
+      case 'cancelmultipart':
+        if (!options.uploadId) {
+          throw new Error('uploadId is required for cancelmultipart operation');
+        }
+        if (!options.key) {
+          throw new Error('key is required for cancelmultipart operation');
+        }
+        path = `/api/v1/files/multipart/${options.uploadId}/cancel`;
+        method = 'POST';
+        queryParams.append('key', options.key);
+        break;
+
+      default:
+        throw new Error(`Unsupported operation type: ${type}`);
+    }
+
+    const { signature } = this.generateSignature(method, path, timestamp);
+
+    // Add auth params
+    queryParams.append('access_key', this.config.accessKey);
+    queryParams.append('signature', signature);
+    queryParams.append('timestamp', timestamp);
+
+    return `${this.config.baseUrl}${path}?${queryParams.toString()}`;
+  }
 }
 
 module.exports = StorageSDK;
