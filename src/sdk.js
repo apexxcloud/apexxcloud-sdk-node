@@ -21,7 +21,8 @@ class StorageSDK {
     this.files = {
       upload: this.uploadFile.bind(this),
       delete: this.deleteFile.bind(this),
-      getSignedUrl: this.getSignedUrl.bind(this),
+      getSignedUrl: (bucketName, filePath, options) =>
+        this.generateSignedUrl('download', { bucketName, filePath, ...options }),
       startMultipartUpload: this.startMultipartUpload.bind(this),
       uploadPart: this.uploadPart.bind(this),
       completeMultipartUpload: this.completeMultipartUpload.bind(this),
@@ -201,6 +202,7 @@ class StorageSDK {
   }
 
   async generateSignedUrl(type, options = {}) {
+    // Handle other operation types (existing generateSignedUrl logic)
     const timestamp = new Date().toISOString();
     let path;
     let method;
@@ -282,7 +284,18 @@ class StorageSDK {
         break;
 
       default:
-        throw new Error(`Unsupported operation type: ${type}`);
+        if (!options.filePath) {
+          throw new Error('filePath is required for signed URL operation');
+        }
+        // Handle download signed URL (previously getSignedUrl)
+        return this.makeRequest('GET', '/api/v1/files/signed-url', {
+          params: {
+            bucket_name: options.bucketName || this.config.defaultBucket,
+            region: options.region || this.config.region,
+            file_path: options.filePath,
+            expires_in: options.expiresIn || 3600,
+          },
+        });
     }
 
     const { signature } = this.generateSignature(method, path, timestamp);

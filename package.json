@@ -1,5 +1,5 @@
 {
-  "name": "apexxcloud-sdk-node",
+  "name": "@apexxcloud/sdk-node",
   "version": "1.0.6",
   "description": "Official Node.js SDK for ApexxCloud Storage Service",
   "main": "index.js",
