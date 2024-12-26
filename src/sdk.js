@@ -2,6 +2,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const FormData = require('form-data');
 const fs = require('fs');
+const path = require('path');
 
 class ApexxCloud {
   constructor(config) {
@@ -22,7 +23,7 @@ class ApexxCloud {
       upload: this.uploadFile.bind(this),
       delete: this.deleteFile.bind(this),
       getSignedUrl: (bucketName, key, options) =>
-        this.generateSignedUrl('getObject', { bucketName, key, ...options }),
+        this.generateSignedUrl(options.type, { bucketName, key, ...options }),
       startMultipartUpload: this.startMultipartUpload.bind(this),
       uploadPart: this.uploadPart.bind(this),
       completeMultipartUpload: this.completeMultipartUpload.bind(this),
@@ -86,14 +87,19 @@ class ApexxCloud {
   }
 
   // File Operations
-  async uploadFile(bucketName, key, options = {}) {
+  async uploadFile(fileData, options = {}) {
     const form = new FormData();
-    form.append('file', fs.createReadStream(key));
+    form.append('file', fileData);
+
+    if (!options.key) {
+      throw new Error('key is required for upload operation');
+    }
 
     const queryParams = new URLSearchParams({
-      bucket_name: bucketName || this.config.defaultBucket,
+      bucket_name: options.bucketName || this.config.defaultBucket,
       region: options.region || this.config.region,
       visibility: options.visibility || 'public',
+      key: options.key,
     });
 
     const path = `/api/v1/files/upload?${queryParams.toString()}`;
@@ -105,6 +111,10 @@ class ApexxCloud {
   }
 
   async deleteFile(bucketName, key) {
+    if (!key) {
+      throw new Error('key is required for delete operation');
+    }
+
     const queryParams = new URLSearchParams({
       bucket_name: bucketName || this.config.defaultBucket,
       region: this.config.region,
@@ -116,11 +126,15 @@ class ApexxCloud {
   }
 
   async getSignedUrl(bucketName, key, options = {}) {
+    if (!key) {
+      throw new Error('key is required for signed URL operation');
+    }
+
     const queryParams = new URLSearchParams({
       bucket_name: bucketName || this.config.defaultBucket,
       region: this.config.region,
       key: key,
-      expires_in: options.expiresIn || 3600,
+      expiresIn: options.expiresIn || 3600,
     });
 
     const path = `/api/v1/files/signed-url?${queryParams.toString()}`;
@@ -129,13 +143,19 @@ class ApexxCloud {
 
   // Multipart Upload Operations
   async startMultipartUpload(bucketName, key, options = {}) {
+    if (!key) {
+      throw new Error('key is required for multipart upload');
+    }
+    if (!options.totalParts) {
+      throw new Error('totalParts is required for multipart upload');
+    }
     const queryParams = new URLSearchParams({
       bucket_name: bucketName || this.config.defaultBucket,
       region: this.config.region,
       key: key,
-      total_parts: options.totalParts || 1,
-      mime_type: options.mimeType || 'application/octet-stream',
+      mimeType: options.mimeType || 'application/octet-stream',
       visibility: options.visibility || 'public',
+      totalParts: options.totalParts?.toString() || '0',
     });
 
     const path = `/api/v1/files/multipart/start?${queryParams.toString()}`;
@@ -143,15 +163,28 @@ class ApexxCloud {
   }
 
   async uploadPart(uploadId, partNumber, filePart, options = {}) {
+    if (!uploadId) {
+      throw new Error('uploadId is required for upload part');
+    }
+    if (!partNumber) {
+      throw new Error('partNumber is required for upload part');
+    }
+    if (!options.key) {
+      throw new Error('key is required for upload part');
+    }
+    if (!options.totalParts) {
+      throw new Error('totalParts is required for upload part');
+    }
+
     const form = new FormData();
     form.append('file', filePart);
 
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
       region: this.config.region,
-      part_number: partNumber,
+      partNumber: partNumber,
       key: options.key,
-      total_parts: options.totalParts,
+      totalParts: options.totalParts,
     });
 
     const path = `/api/v1/files/multipart/${uploadId}/upload?${queryParams.toString()}`;
@@ -163,6 +196,16 @@ class ApexxCloud {
   }
 
   async completeMultipartUpload(uploadId, parts, options = {}) {
+    if (!uploadId) {
+      throw new Error('uploadId is required for complete multipart upload');
+    }
+    if (!Array.isArray(parts)) {
+      throw new Error('parts must be an array of {ETag, PartNumber}');
+    }
+    if (!options.key) {
+      throw new Error('key is required for complete multipart upload');
+    }
+
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
       region: this.config.region,
@@ -177,6 +220,13 @@ class ApexxCloud {
   }
 
   async cancelMultipartUpload(uploadId, options = {}) {
+    if (!uploadId) {
+      throw new Error('uploadId is required for cancel multipart upload');
+    }
+    if (!options.key) {
+      throw new Error('key is required for cancel multipart upload');
+    }
+
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
       region: this.config.region,
@@ -210,7 +260,7 @@ class ApexxCloud {
       'uploadpart',
       'completemultipart',
       'cancelmultipart',
-      'getObject',
+      'download',
     ];
     if (!validOperations.includes(type)) {
       throw new Error(`Unsupported operation type: ${type}`);
@@ -223,6 +273,7 @@ class ApexxCloud {
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
       region: options.region || this.config.region,
+      key: options.key,
     });
 
     switch (type) {
@@ -245,11 +296,18 @@ class ApexxCloud {
         if (!options.key) {
           throw new Error('key is required for start-multipart operation');
         }
+        if (!options.totalParts) {
+          throw new Error('totalParts is required for start-multipart operation');
+        }
+        if (!options.mimeType) {
+          throw new Error('mimeType is required for start-multipart operation');
+        }
+
         path = '/api/v1/files/multipart/start';
         method = 'POST';
         queryParams.append('key', options.key);
-        queryParams.append('total_parts', options.totalParts || 1);
-        queryParams.append('mime_type', options.mimeType || 'application/octet-stream');
+        queryParams.append('totalParts', options.totalParts);
+        queryParams.append('mimeType', options.mimeType);
         queryParams.append('visibility', options.visibility || 'public');
         break;
 
@@ -297,7 +355,7 @@ class ApexxCloud {
         queryParams.append('key', options.key);
         break;
 
-      case 'getObject':
+      case 'download':
         if (!options.key) {
           throw new Error('key is required for signed URL operation');
         }
@@ -306,7 +364,7 @@ class ApexxCloud {
             bucket_name: options.bucketName || this.config.defaultBucket,
             region: options.region || this.config.region,
             key: options.key,
-            expires_in: options.expiresIn || 3600,
+            expiresIn: options.expiresIn || 3600,
           },
         });
 

@@ -7,8 +7,11 @@ declare module '@apexxcloud/sdk-node' {
   }
 
   interface UploadOptions {
-    region?: string;
-    visibility?: 'public' | 'private';
+    onProgress?: (progress: any) => void;
+    onComplete?: (response: any) => void;
+    onError?: (error: any) => void;
+    onStart?: (event: any) => void;
+    signal?: AbortSignal;
   }
 
   interface SignedUrlOptions {
