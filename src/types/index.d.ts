@@ -1,5 +1,5 @@
-declare module 'apexxcloud-sdk-node' {
-  interface StorageSDKConfig {
+declare module '@apexxcloud/sdk-node' {
+  interface BucketConfig {
     accessKey: string;
     secretKey: string;
     region?: string;
@@ -29,7 +29,7 @@ declare module 'apexxcloud-sdk-node' {
 
   interface CompleteMultipartOptions {
     bucketName?: string;
-    fileName: string;
+    key: string;
   }
 
   interface CancelMultipartOptions {
@@ -48,7 +48,7 @@ declare module 'apexxcloud-sdk-node' {
     region?: string;
     visibility?: 'public' | 'private';
     filePath?: string;
-    fileName?: string;
+    
     uploadId?: string;
     partNumber?: number;
     key?: string;
@@ -64,14 +64,14 @@ declare module 'apexxcloud-sdk-node' {
     | 'completemultipart'
     | 'cancelmultipart';
 
-  interface StorageSDK {
+  interface ApexxCloud {
     files: {
       upload(bucketName: string, filePath: string, options?: UploadOptions): Promise<any>;
       delete(bucketName: string, filePath: string): Promise<any>;
       getSignedUrl(bucketName: string, filePath: string, options?: SignedUrlOptions): Promise<any>;
       startMultipartUpload(
         bucketName: string,
-        fileName: string,
+        key: string,
         options?: MultipartUploadOptions
       ): Promise<any>;
       uploadPart(
@@ -95,9 +95,9 @@ declare module 'apexxcloud-sdk-node' {
     generateSignedUrl(type: SignedUrlType, options: SignedUrlGenerateOptions): Promise<string>;
   }
 
-  class StorageSDK {
-    constructor(config: StorageSDKConfig);
+  class ApexxCloud {
+    constructor(config: BucketConfig);
   }
 
-  export = StorageSDK;
+  export = ApexxCloud;
 }

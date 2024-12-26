@@ -5,18 +5,18 @@ Official Node.js SDK for ApexxCloud Storage Service.
 ## Installation 
 
 ```bash
-npm install apexxcloud-sdk-node
+npm install @apexxcloud/sdk-node
 ```
 
 ## Quick Start
 
 ```javascript
-const StorageSDK = require('apexxcloud-sdk-node');
+const ApexxCloud = require('@apexxcloud/sdk-node');
 
-const storage = new StorageSDK({
+const storage = new ApexxCloud({
   accessKey: 'your-access-key',
   secretKey: 'your-secret-key',
-  region: 'us-east-1',
+  region: 'APAC',
   bucket: 'default-bucket'
 });
 ```
@@ -72,7 +72,7 @@ const url = await storage.files.getSignedUrl(
 ```javascript
 const upload = await storage.files.startMultipartUpload(
   'bucket-name',    // bucket name (optional if default bucket configured)
-  'large-file.zip', // filename
+  'large-file.zip', // key
   {
     totalParts: 3,                          // optional, defaults to 1
     mimeType: 'application/zip',            // optional
@@ -102,7 +102,7 @@ await storage.files.completeMultipartUpload(
   parts,       // array of completed parts
   {
     bucketName: 'bucket-name',     // optional if default bucket configured
-    fileName: 'large-file.zip'     // original filename
+    key: 'large-file.zip'     // original filename
   }
 );
 ```
