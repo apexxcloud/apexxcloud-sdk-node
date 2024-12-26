@@ -48,7 +48,7 @@ declare module '@apexxcloud/sdk-node' {
     region?: string;
     visibility?: 'public' | 'private';
     filePath?: string;
-    
+
     uploadId?: string;
     partNumber?: number;
     key?: string;

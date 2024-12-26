@@ -1,6 +1,6 @@
 {
   "name": "@apexxcloud/sdk-node",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Official Node.js SDK for ApexxCloud Storage Service",
   "main": "index.js",
   "types": "types/index.d.ts",
@@ -10,7 +10,6 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src/",
     "prepare": "husky install",
-  
     "version": "npm run format && git add -A src",
     "postversion": "git push && git push --tags",
     "format": "prettier --write \"src/**/*.{js,ts}\""
