@@ -4,6 +4,12 @@
   "description": "Official Node.js SDK for ApexxCloud Storage Service",
   "main": "index.js",
   "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./src/sdk.js",
+      "import": "./src/sdk.js"
+    }
+  },
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
