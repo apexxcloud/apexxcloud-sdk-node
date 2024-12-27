@@ -269,7 +269,7 @@ class ApexxCloud {
       limit: options.limit || 20,
     });
 
-    const path = `/api/v1/files/list?${queryParams.toString()}`;
+    const path = `/api/v1/files/contents?${queryParams.toString()}`;
     return this.makeRequest('GET', path);
   }
 
