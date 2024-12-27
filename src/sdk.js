@@ -337,9 +337,9 @@ class ApexxCloud {
         }
         path = `/api/v1/files/multipart/${options.uploadId}`;
         method = 'POST';
-        queryParams.append('part_number', options.partNumber);
+        queryParams.append('partNumber', options.partNumber);
 
-        queryParams.append('total_parts', options.totalParts);
+        queryParams.append('totalParts', options.totalParts);
         break;
 
       case 'completemultipart':
