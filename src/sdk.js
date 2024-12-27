@@ -385,7 +385,7 @@ class ApexxCloud {
         method = 'GET';
 
         queryParams.append('expiresIn', options.expiresIn || 3600);
-        path = '/api/v1/files/signed-url' + queryParams.toString();
+        path = '/api/v1/files/signed-url?' + queryParams.toString();
         return this.makeRequest('GET', path, {});
 
       default:
