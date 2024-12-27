@@ -1,106 +1,56 @@
-declare module '@apexxcloud/sdk-node' {
+declare module '@apexxcloud/sdk-js' {
+  type SignedUrlType = 'upload' | 'delete' | 'start-multipart' | 'uploadpart' | 'completemultipart' | 'cancelmultipart' | 'download';
+  
+  interface SignedUrlOptions {
+    bucketName?: string;
+    region?: string;
+    key: string;
+    mimeType?: string;
+    totalParts?: number;
+    partNumber?: number;
+    uploadId?: string;
+    visibility?: 'public' | 'private';
+    expiresIn?: number;
+  }
+
   interface BucketConfig {
     accessKey: string;
     secretKey: string;
+    baseUrl?: string;
     region?: string;
     bucket?: string;
   }
 
-  interface UploadOptions {
-    onProgress?: (progress: any) => void;
-    onComplete?: (response: any) => void;
-    onError?: (error: any) => void;
-    onStart?: (event: any) => void;
-    signal?: AbortSignal;
-  }
+  // ... keep existing event interfaces ...
 
-  interface SignedUrlOptions {
-    expiresIn?: number;
-  }
-
-  interface MultipartUploadOptions {
-    totalParts?: number;
-    mimeType?: string;
-    visibility?: 'public' | 'private';
-  }
-
-  interface MultipartUploadPartOptions {
-    bucketName?: string;
-    key: string;
-    totalParts: number;
-  }
-
-  interface CompleteMultipartOptions {
-    bucketName?: string;
-    key: string;
-  }
-
-  interface CancelMultipartOptions {
-    bucketName?: string;
-    key: string;
-  }
-
-  interface BucketListOptions {
-    prefix?: string;
-    page?: number;
-    limit?: number;
-  }
-
-  interface SignedUrlGenerateOptions {
-    bucketName?: string;
-    region?: string;
-    visibility?: 'public' | 'private';
-    filePath?: string;
-
-    uploadId?: string;
-    partNumber?: number;
-    key?: string;
-    totalParts?: number;
-    mimeType?: string;
-  }
-
-  type SignedUrlType =
-    | 'upload'
-    | 'delete'
-    | 'start-multipart'
-    | 'uploadpart'
-    | 'completemultipart'
-    | 'cancelmultipart';
-
-  interface ApexxCloud {
+  export default class ApexxCloud {
+    constructor(config: BucketConfig);
+    
     files: {
-      upload(bucketName: string, filePath: string, options?: UploadOptions): Promise<any>;
-      delete(bucketName: string, filePath: string): Promise<any>;
-      getSignedUrl(bucketName: string, filePath: string, options?: SignedUrlOptions): Promise<any>;
-      startMultipartUpload(
-        bucketName: string,
-        key: string,
+      upload(
+        file: File,
+        getSignedUrl: GetSignedUrlFn,
+        options?: UploadOptions
+      ): Promise<any>;
+      
+      uploadMultipart(
+        file: File,
+        getSignedUrl: GetSignedUrlFn,
         options?: MultipartUploadOptions
       ): Promise<any>;
-      uploadPart(
-        uploadId: string,
-        partNumber: number,
-        filePart: any,
-        options: MultipartUploadPartOptions
-      ): Promise<any>;
-      completeMultipartUpload(
-        uploadId: string,
-        parts: Array<{ ETag: string; PartNumber: number }>,
-        options: CompleteMultipartOptions
-      ): Promise<any>;
-      cancelMultipartUpload(uploadId: string, options: CancelMultipartOptions): Promise<any>;
+
+      delete(bucketName: string, key: string): Promise<any>;
+      getSignedUrl(bucketName: string, key: string, options?: { expiresIn?: number }): Promise<any>;
+      startMultipartUpload(bucketName: string, key: string, options: { totalParts: number; mimeType?: string; visibility?: 'public' | 'private' }): Promise<any>;
+      uploadPart(uploadId: string, partNumber: number, filePart: any, options: { bucketName?: string; key: string; totalParts: number }): Promise<any>;
+      completeMultipartUpload(uploadId: string, parts: Array<{ ETag: string; PartNumber: number }>, options: { bucketName?: string; key: string }): Promise<any>;
+      cancelMultipartUpload(uploadId: string, options: { bucketName?: string; key: string }): Promise<any>;
     };
 
     bucket: {
-      listContents(bucketName: string, options?: BucketListOptions): Promise<any>;
+      listContents(bucketName: string, options?: { prefix?: string; page?: number; limit?: number }): Promise<any>;
     };
 
-    generateSignedUrl(type: SignedUrlType, options: SignedUrlGenerateOptions): Promise<string>;
+    generateSignedUrl(type: SignedUrlType, options: SignedUrlOptions): Promise<string>;
   }
-
-  class ApexxCloud {
-    constructor(config: BucketConfig);
-  }
-
-  export = ApexxCloud;
 }
