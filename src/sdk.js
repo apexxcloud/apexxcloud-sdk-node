@@ -88,15 +88,14 @@ class ApexxCloud {
 
   // File Operations
   async uploadFile(fileData, options = {}) {
-    if (!fileData || !(fileData instanceof Blob)) {
-      throw new Error('fileData must be a Blob or File object');
+    const form = new FormData();
+    form.append('file', fileData);
+    if (!fileData) {
+      throw new Error('fileData is required for upload operation');
     }
     if (!options.key) {
       throw new Error('key is required for upload operation');
     }
-
-    const form = new FormData();
-    form.append('file', fileData, options.filename || 'file');
 
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
@@ -110,8 +109,6 @@ class ApexxCloud {
     return this.makeRequest('PUT', path, {
       data: form,
       headers: form.getHeaders(),
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
     });
   }
 
