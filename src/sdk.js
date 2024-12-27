@@ -90,7 +90,9 @@ class ApexxCloud {
   async uploadFile(fileData, options = {}) {
     const form = new FormData();
     form.append('file', fileData);
-
+    if (!fileData) {
+      throw new Error('fileData is required for upload operation');
+    }
     if (!options.key) {
       throw new Error('key is required for upload operation');
     }
