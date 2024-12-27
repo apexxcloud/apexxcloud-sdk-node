@@ -147,22 +147,6 @@ class ApexxCloud {
     return this.makeRequest('DELETE', path);
   }
 
-  async getSignedUrl(bucketName, key, options = {}) {
-    if (!key) {
-      throw new Error('key is required for signed URL operation');
-    }
-
-    const queryParams = new URLSearchParams({
-      bucket_name: bucketName || this.config.defaultBucket,
-      region: this.config.region,
-      key: key,
-      expiresIn: options.expiresIn || 3600,
-    });
-
-    const path = `/api/v1/files/signed-url?${queryParams.toString()}`;
-    return this.makeRequest('GET', path);
-  }
-
   // Multipart Upload Operations
   async startMultipartUpload(bucketName, key, options = {}) {
     if (!key) {
