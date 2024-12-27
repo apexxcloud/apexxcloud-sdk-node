@@ -88,14 +88,21 @@ class ApexxCloud {
 
   // File Operations
   async uploadFile(fileData, options = {}) {
-    const form = new FormData();
-    form.append('file', fileData);
     if (!fileData) {
       throw new Error('fileData is required for upload operation');
     }
     if (!options.key) {
       throw new Error('key is required for upload operation');
     }
+
+    const form = new FormData();
+
+    // The field name MUST be "file" to match multer's expectations
+    form.append('file', fileData, {
+      filename: options.filename || options.key,
+      contentType: options.contentType || 'application/octet-stream',
+      knownLength: fileData.length, // Add the buffer length
+    });
 
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
@@ -106,9 +113,22 @@ class ApexxCloud {
 
     const path = `/api/v1/files/upload?${queryParams.toString()}`;
 
+    // Get the form length
+    const formLength = await new Promise((resolve, reject) => {
+      form.getLength((err, length) => {
+        if (err) reject(err);
+        resolve(length);
+      });
+    });
+
     return this.makeRequest('PUT', path, {
       data: form,
-      headers: form.getHeaders(),
+      headers: {
+        ...form.getHeaders(),
+        'Content-Length': formLength, // Add Content-Length header
+      },
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
     });
   }
 
