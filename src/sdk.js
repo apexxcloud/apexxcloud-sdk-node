@@ -214,7 +214,7 @@ class ApexxCloud {
       totalParts: options.totalParts,
     });
 
-    const path = `/api/v1/files/multipart/${uploadId}/upload?${queryParams.toString()}`;
+    const path = `/api/v1/files/multipart/${uploadId}?${queryParams.toString()}`;
 
     return this.makeRequest('POST', path, {
       data: form,
@@ -260,8 +260,8 @@ class ApexxCloud {
       key: options.key,
     });
 
-    const path = `/api/v1/files/multipart/${uploadId}/cancel?${queryParams.toString()}`;
-    return this.makeRequest('POST', path);
+    const path = `/api/v1/files/multipart/${uploadId}?${queryParams.toString()}`;
+    return this.makeRequest('DELETE', path);
   }
 
   // Bucket Operations
@@ -351,7 +351,7 @@ class ApexxCloud {
         if (!options.totalParts) {
           throw new Error('totalParts is required for uploadpart operation');
         }
-        path = `/api/v1/files/multipart/${options.uploadId}/upload`;
+        path = `/api/v1/files/multipart/${options.uploadId}`;
         method = 'POST';
         queryParams.append('part_number', options.partNumber);
         queryParams.append('key', options.key);
@@ -377,8 +377,8 @@ class ApexxCloud {
         if (!options.key) {
           throw new Error('key is required for cancelmultipart operation');
         }
-        path = `/api/v1/files/multipart/${options.uploadId}/cancel`;
-        method = 'POST';
+        path = `/api/v1/files/multipart/${options.uploadId}`;
+        method = 'DELETE';
         queryParams.append('key', options.key);
         break;
 
@@ -397,7 +397,9 @@ class ApexxCloud {
         throw new Error(`Unsupported operation type: ${type}`);
     }
 
-    const { signature } = this.generateSignature(method, path, timestamp);
+    // Add the queryParams to the path before generating signature
+    const fullPath = `${path}?${queryParams.toString()}`;
+    const { signature } = this.generateSignature(method, fullPath, timestamp);
 
     // Add auth params
     queryParams.append('access_key', this.config.accessKey);
