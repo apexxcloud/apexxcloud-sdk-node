@@ -300,7 +300,7 @@ class ApexxCloud {
         }
         path = '/api/v1/files/delete';
         method = 'DELETE';
-        queryParams.append('key', options.key);
+
         break;
 
       case 'start-multipart':
@@ -316,7 +316,7 @@ class ApexxCloud {
 
         path = '/api/v1/files/multipart/start';
         method = 'POST';
-        queryParams.append('key', options.key);
+
         queryParams.append('totalParts', options.totalParts);
         queryParams.append('mimeType', options.mimeType);
         queryParams.append('visibility', options.visibility || 'public');
@@ -338,7 +338,7 @@ class ApexxCloud {
         path = `/api/v1/files/multipart/${options.uploadId}`;
         method = 'POST';
         queryParams.append('part_number', options.partNumber);
-        queryParams.append('key', options.key);
+
         queryParams.append('total_parts', options.totalParts);
         break;
 
@@ -351,7 +351,7 @@ class ApexxCloud {
         }
         path = `/api/v1/files/multipart/${options.uploadId}/complete`;
         method = 'POST';
-        queryParams.append('key', options.key);
+
         break;
 
       case 'cancelmultipart':
@@ -363,7 +363,7 @@ class ApexxCloud {
         }
         path = `/api/v1/files/multipart/${options.uploadId}`;
         method = 'DELETE';
-        queryParams.append('key', options.key);
+
         break;
 
       case 'download':
