@@ -36,7 +36,6 @@ declare module '@apexxcloud/sdk-js' {
     files: {
       upload(file: Blob, options?: UploadOptions): Promise<any>;
 
-  
       delete(bucketName: string, key: string): Promise<any>;
       getSignedUrl(bucketName: string, key: string, options?: { expiresIn?: number }): Promise<any>;
       startMultipartUpload(
