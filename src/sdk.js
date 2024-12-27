@@ -13,7 +13,7 @@ class ApexxCloud {
     this.config = {
       accessKey: config.accessKey,
       secretKey: config.secretKey,
-      baseUrl: 'https://api.apexxcloud.com',
+      baseUrl: 'http://api.apexxcloud.com',
       region: config.region,
       defaultBucket: config.bucket,
     };
@@ -381,14 +381,12 @@ class ApexxCloud {
         if (!options.key) {
           throw new Error('key is required for signed URL operation');
         }
-        return this.makeRequest('GET', '/api/v1/files/signed-url', {
-          params: {
-            bucket_name: options.bucketName || this.config.defaultBucket,
-            region: options.region || this.config.region,
-            key: options.key,
-            expiresIn: options.expiresIn || 3600,
-          },
-        });
+
+        method = 'GET';
+
+        queryParams.append('expiresIn', options.expiresIn || 3600);
+        path = '/api/v1/files/signed-url' + queryParams.toString();
+        return this.makeRequest('GET', path, {});
 
       default:
         throw new Error(`Unsupported operation type: ${type}`);
