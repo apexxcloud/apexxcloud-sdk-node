@@ -13,7 +13,7 @@ class ApexxCloud {
     this.config = {
       accessKey: config.accessKey,
       secretKey: config.secretKey,
-      baseUrl: 'http://api.apexxcloud.com',
+      baseUrl: 'https://api.apexxcloud.com',
       region: config.region,
       defaultBucket: config.bucket,
     };
