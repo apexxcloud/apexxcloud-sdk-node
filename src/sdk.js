@@ -290,7 +290,7 @@ class ApexxCloud {
     switch (type) {
       case 'upload':
         path = '/api/v1/files/upload';
-        method = 'POST';
+        method = 'PUT';
         queryParams.append('visibility', options.visibility || 'public');
         break;
 
