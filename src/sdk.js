@@ -104,7 +104,7 @@ class ApexxCloud {
 
     const path = `/api/v1/files/upload?${queryParams.toString()}`;
 
-    return this.makeRequest('POST', path, {
+    return this.makeRequest('PUT', path, {
       data: form,
       headers: form.getHeaders(),
     });
