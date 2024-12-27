@@ -1,6 +1,13 @@
 declare module '@apexxcloud/sdk-js' {
-  type SignedUrlType = 'upload' | 'delete' | 'start-multipart' | 'uploadpart' | 'completemultipart' | 'cancelmultipart' | 'download';
-  
+  type SignedUrlType =
+    | 'upload'
+    | 'delete'
+    | 'start-multipart'
+    | 'uploadpart'
+    | 'completemultipart'
+    | 'cancelmultipart'
+    | 'download';
+
   interface SignedUrlOptions {
     bucketName?: string;
     region?: string;
@@ -25,14 +32,10 @@ declare module '@apexxcloud/sdk-js' {
 
   export default class ApexxCloud {
     constructor(config: BucketConfig);
-    
+
     files: {
-      upload(
-        file: File,
-        getSignedUrl: GetSignedUrlFn,
-        options?: UploadOptions
-      ): Promise<any>;
-      
+      upload(file: File, getSignedUrl: GetSignedUrlFn, options?: UploadOptions): Promise<any>;
+
       uploadMultipart(
         file: File,
         getSignedUrl: GetSignedUrlFn,
@@ -41,14 +44,33 @@ declare module '@apexxcloud/sdk-js' {
 
       delete(bucketName: string, key: string): Promise<any>;
       getSignedUrl(bucketName: string, key: string, options?: { expiresIn?: number }): Promise<any>;
-      startMultipartUpload(bucketName: string, key: string, options: { totalParts: number; mimeType?: string; visibility?: 'public' | 'private' }): Promise<any>;
-      uploadPart(uploadId: string, partNumber: number, filePart: any, options: { bucketName?: string; key: string; totalParts: number }): Promise<any>;
-      completeMultipartUpload(uploadId: string, parts: Array<{ ETag: string; PartNumber: number }>, options: { bucketName?: string; key: string }): Promise<any>;
-      cancelMultipartUpload(uploadId: string, options: { bucketName?: string; key: string }): Promise<any>;
+      startMultipartUpload(
+        bucketName: string,
+        key: string,
+        options: { totalParts: number; mimeType?: string; visibility?: 'public' | 'private' }
+      ): Promise<any>;
+      uploadPart(
+        uploadId: string,
+        partNumber: number,
+        filePart: any,
+        options: { bucketName?: string; key: string; totalParts: number }
+      ): Promise<any>;
+      completeMultipartUpload(
+        uploadId: string,
+        parts: Array<{ ETag: string; PartNumber: number }>,
+        options: { bucketName?: string; key: string }
+      ): Promise<any>;
+      cancelMultipartUpload(
+        uploadId: string,
+        options: { bucketName?: string; key: string }
+      ): Promise<any>;
     };
 
     bucket: {
-      listContents(bucketName: string, options?: { prefix?: string; page?: number; limit?: number }): Promise<any>;
+      listContents(
+        bucketName: string,
+        options?: { prefix?: string; page?: number; limit?: number }
+      ): Promise<any>;
     };
 
     generateSignedUrl(type: SignedUrlType, options: SignedUrlOptions): Promise<string>;
