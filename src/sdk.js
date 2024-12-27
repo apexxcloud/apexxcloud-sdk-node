@@ -199,7 +199,12 @@ class ApexxCloud {
     }
 
     const form = new FormData();
-    form.append('file', filePart);
+
+    form.append('file', filePart, {
+      filename: options.filename || options.key,
+      contentType: options.contentType || 'application/octet-stream',
+      knownLength: filePart.length, // Add the buffer length
+    });
 
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
