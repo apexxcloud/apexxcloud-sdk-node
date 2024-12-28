@@ -33,14 +33,15 @@ class ApexxCloud {
 
     /**
      * File operations
-     * @type {Object}
-     * @property {function(Buffer|ReadStream, Object): Promise<Object>} upload - Upload a file
-     * @property {function(string, string): Promise<Object>} delete - Delete a file
-     * @property {function(string, string, Object): Promise<string>} getSignedUrl - Generate a signed URL
-     * @property {function(string, string, Object): Promise<Object>} startMultipartUpload - Start multipart upload
-     * @property {function(string, number, Buffer|ReadStream, Object): Promise<Object>} uploadPart - Upload a part
-     * @property {function(string, Array<{ETag: string, PartNumber: number}>, Object): Promise<Object>} completeMultipartUpload - Complete multipart upload
-     * @property {function(string, Object): Promise<Object>} cancelMultipartUpload - Cancel multipart upload
+     * @type {{
+     *   upload: (file: Buffer|NodeJS.ReadStream, options: import('./types').UploadOptions) => Promise<{url: string}>,
+     *   delete: (bucketName: string, key: string) => Promise<{success: boolean}>,
+     *   getSignedUrl: (bucketName: string, key: string, options: {type: import('./types').SignedUrlType, expiresIn?: number}) => Promise<string>,
+     *   startMultipartUpload: (bucketName: string, key: string, options: import('./types').MultipartUploadOptions) => Promise<{uploadId: string}>,
+     *   uploadPart: (uploadId: string, partNumber: number, filePart: Buffer|NodeJS.ReadStream, options: import('./types').UploadPartOptions) => Promise<import('./types').UploadPartResponse>,
+     *   completeMultipartUpload: (uploadId: string, parts: Array<import('./types').UploadPartResponse>, options: import('./types').CompleteMultipartOptions) => Promise<import('./types').CompleteMultipartResponse>,
+     *   cancelMultipartUpload: (uploadId: string, options: import('./types').CompleteMultipartOptions) => Promise<{success: boolean}>
+     * }}
      */
     this.files = {
       upload: this.uploadFile.bind(this),
@@ -55,8 +56,9 @@ class ApexxCloud {
 
     /**
      * Bucket operations
-     * @type {Object}
-     * @property {function(string, Object): Promise<Object>} listContents - List bucket contents
+     * @type {{
+     *   listContents: (bucketName: string, options?: import('./types').BucketContentsOptions) => Promise<import('./types').BucketContentsResponse>
+     * }}
      */
     this.bucket = {
       listContents: this.getBucketContents.bind(this),
