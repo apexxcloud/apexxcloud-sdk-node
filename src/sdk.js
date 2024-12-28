@@ -4,7 +4,20 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * ApexxCloud SDK for Node.js
+ * Client for interacting with the ApexxCloud Storage API
+ */
 class ApexxCloud {
+  /**
+   * Creates a new ApexxCloud client instance
+   * @param {Object} config - Configuration options
+   * @param {string} config.accessKey - Your ApexxCloud access key
+   * @param {string} config.secretKey - Your ApexxCloud secret key
+   * @param {string} [config.region] - The region to use for requests
+   * @param {string} [config.bucket] - Default bucket name for operations
+   * @throws {Error} When access key or secret key is missing
+   */
   constructor(config) {
     if (!config.accessKey || !config.secretKey) {
       throw new Error('Access key and secret key are required');
@@ -35,6 +48,14 @@ class ApexxCloud {
     };
   }
 
+  /**
+   * Generates a signature for API requests
+   * @private
+   * @param {string} method - HTTP method
+   * @param {string} path - Request path
+   * @param {string} [timestamp] - ISO timestamp (defaults to current time)
+   * @returns {{signature: string, timestamp: string}} Signature and timestamp
+   */
   generateSignature(method, path, timestamp = new Date().toISOString()) {
     const stringToSign = `${method}\n${path}\n${timestamp}`;
     const signature = crypto
@@ -86,7 +107,19 @@ class ApexxCloud {
     return error;
   }
 
-  // File Operations
+  /**
+   * Uploads a file to ApexxCloud storage
+   * @param {Buffer|ReadStream} fileData - File data to upload
+   * @param {Object} options - Upload options
+   * @param {string} options.key - Object key/path in the bucket
+   * @param {string} [options.bucketName] - Target bucket name
+   * @param {string} [options.region] - Target region
+   * @param {string} [options.visibility="public"] - File visibility
+   * @param {string} [options.filename] - Original filename
+   * @param {string} [options.contentType] - File MIME type
+   * @returns {Promise<Object>} Upload response
+   * @throws {Error} When required parameters are missing
+   */
   async uploadFile(fileData, options = {}) {
     if (!fileData) {
       throw new Error('fileData is required for upload operation');
@@ -132,6 +165,13 @@ class ApexxCloud {
     });
   }
 
+  /**
+   * Deletes a file from ApexxCloud storage
+   * @param {string} bucketName - Bucket name
+   * @param {string} key - Object key to delete
+   * @returns {Promise<Object>} Deletion response
+   * @throws {Error} When key is missing
+   */
   async deleteFile(bucketName, key) {
     if (!key) {
       throw new Error('key is required for delete operation');
@@ -147,7 +187,17 @@ class ApexxCloud {
     return this.makeRequest('DELETE', path);
   }
 
-  // Multipart Upload Operations
+  /**
+   * Initiates a multipart upload
+   * @param {string} bucketName - Bucket name
+   * @param {string} key - Object key
+   * @param {Object} options - Upload options
+   * @param {number} options.totalParts - Total number of parts
+   * @param {string} [options.mimeType="application/octet-stream"] - File MIME type
+   * @param {string} [options.visibility="public"] - File visibility
+   * @returns {Promise<Object>} Multipart upload initialization response
+   * @throws {Error} When required parameters are missing
+   */
   async startMultipartUpload(bucketName, key, options = {}) {
     if (!key) {
       throw new Error('key is required for multipart upload');
@@ -248,7 +298,15 @@ class ApexxCloud {
     return this.makeRequest('DELETE', path);
   }
 
-  // Bucket Operations
+  /**
+   * Lists contents of a bucket
+   * @param {string} bucketName - Bucket name
+   * @param {Object} [options] - Listing options
+   * @param {string} [options.prefix=""] - Filter results by prefix
+   * @param {number} [options.page=1] - Page number
+   * @param {number} [options.limit=20] - Results per page
+   * @returns {Promise<Object>} Bucket contents
+   */
   async getBucketContents(bucketName, options = {}) {
     const queryParams = new URLSearchParams({
       bucket_name: bucketName || this.config.defaultBucket,
@@ -262,6 +320,22 @@ class ApexxCloud {
     return this.makeRequest('GET', path);
   }
 
+  /**
+   * Generates a signed URL for various operations
+   * @param {('upload'|'delete'|'start-multipart'|'uploadpart'|'completemultipart'|'cancelmultipart'|'download')} type - Operation type
+   * @param {Object} options - URL options
+   * @param {string} options.key - Object key
+   * @param {string} [options.bucketName] - Bucket name
+   * @param {string} [options.region] - Region
+   * @param {string} [options.visibility] - File visibility (for upload operations)
+   * @param {number} [options.expiresIn] - URL expiration in seconds (for download)
+   * @param {string} [options.uploadId] - Upload ID (for multipart operations)
+   * @param {number} [options.partNumber] - Part number (for uploadpart)
+   * @param {number} [options.totalParts] - Total parts (for multipart operations)
+   * @param {string} [options.mimeType] - File MIME type (for start-multipart)
+   * @returns {Promise<string>} Signed URL
+   * @throws {Error} When required parameters are missing or operation type is invalid
+   */
   async generateSignedUrl(type, options = {}) {
     // Add validation for operation type first
     const validOperations = [
