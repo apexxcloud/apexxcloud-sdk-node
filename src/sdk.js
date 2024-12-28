@@ -34,13 +34,39 @@ class ApexxCloud {
     /**
      * File operations
      * @type {{
-     *   upload: (file: Buffer|NodeJS.ReadStream, options: import('./types').UploadOptions) => Promise<{url: string}>,
-     *   delete: (bucketName: string, key: string) => Promise<{success: boolean}>,
-     *   getSignedUrl: (bucketName: string, key: string, options: {type: import('./types').SignedUrlType, expiresIn?: number}) => Promise<string>,
-     *   startMultipartUpload: (bucketName: string, key: string, options: import('./types').MultipartUploadOptions) => Promise<{uploadId: string}>,
-     *   uploadPart: (uploadId: string, partNumber: number, filePart: Buffer|NodeJS.ReadStream, options: import('./types').UploadPartOptions) => Promise<import('./types').UploadPartResponse>,
-     *   completeMultipartUpload: (uploadId: string, parts: Array<import('./types').UploadPartResponse>, options: import('./types').CompleteMultipartOptions) => Promise<import('./types').CompleteMultipartResponse>,
-     *   cancelMultipartUpload: (uploadId: string, options: import('./types').CompleteMultipartOptions) => Promise<{success: boolean}>
+     *   upload: function(file: Buffer|NodeJS.ReadStream, options: {
+     *     key: string,
+     *     bucketName?: string,
+     *     region?: string,
+     *     visibility?: 'public'|'private',
+     *     filename?: string,
+     *     contentType?: string
+     *   }): Promise<{url: string}>,
+     *   delete: function(bucketName: string, key: string): Promise<{success: boolean}>,
+     *   getSignedUrl: function(bucketName: string, key: string, options: {
+     *     type: ('upload'|'delete'|'start-multipart'|'uploadpart'|'completemultipart'|'cancelmultipart'|'download'),
+     *     expiresIn?: number
+     *   }): Promise<string>,
+     *   startMultipartUpload: function(bucketName: string, key: string, options: {
+     *     totalParts: number,
+     *     mimeType?: string,
+     *     visibility?: 'public'|'private'
+     *   }): Promise<{uploadId: string}>,
+     *   uploadPart: function(uploadId: string, partNumber: number, filePart: Buffer|NodeJS.ReadStream, options: {
+     *     key: string,
+     *     bucketName?: string,
+     *     totalParts: number,
+     *     filename?: string,
+     *     contentType?: string
+     *   }): Promise<{ETag: string, PartNumber: number}>,
+     *   completeMultipartUpload: function(uploadId: string, parts: Array<{ETag: string, PartNumber: number}>, options: {
+     *     key: string,
+     *     bucketName?: string
+     *   }): Promise<{Location: string, Bucket: string, Key: string, ETag: string}>,
+     *   cancelMultipartUpload: function(uploadId: string, options: {
+     *     key: string,
+     *     bucketName?: string
+     *   }): Promise<{success: boolean}>
      * }}
      */
     this.files = {
@@ -57,7 +83,21 @@ class ApexxCloud {
     /**
      * Bucket operations
      * @type {{
-     *   listContents: (bucketName: string, options?: import('./types').BucketContentsOptions) => Promise<import('./types').BucketContentsResponse>
+     *   listContents: function(bucketName: string, options?: {
+     *     prefix?: string,
+     *     page?: number,
+     *     limit?: number
+     *   }): Promise<{
+     *     contents: Array<{
+     *       key: string,
+     *       size: number,
+     *       lastModified: string,
+     *       etag: string
+     *     }>,
+     *     page: number,
+     *     totalPages: number,
+     *     totalItems: number
+     *   }>
      * }}
      */
     this.bucket = {
