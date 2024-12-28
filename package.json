@@ -1,6 +1,6 @@
 {
   "name": "@apexxcloud/sdk-node",
-  "version": "1.0.30",
+  "version": "1.0.31",
   "description": "Official Node.js SDK for ApexxCloud Storage Service",
   "main": "index.js",
   "types": "types/index.d.ts",
