@@ -31,7 +31,17 @@ class ApexxCloud {
       defaultBucket: config.bucket,
     };
 
-    // Initialize API clients
+    /**
+     * File operations
+     * @type {Object}
+     * @property {function(Buffer|ReadStream, Object): Promise<Object>} upload - Upload a file
+     * @property {function(string, string): Promise<Object>} delete - Delete a file
+     * @property {function(string, string, Object): Promise<string>} getSignedUrl - Generate a signed URL
+     * @property {function(string, string, Object): Promise<Object>} startMultipartUpload - Start multipart upload
+     * @property {function(string, number, Buffer|ReadStream, Object): Promise<Object>} uploadPart - Upload a part
+     * @property {function(string, Array<{ETag: string, PartNumber: number}>, Object): Promise<Object>} completeMultipartUpload - Complete multipart upload
+     * @property {function(string, Object): Promise<Object>} cancelMultipartUpload - Cancel multipart upload
+     */
     this.files = {
       upload: this.uploadFile.bind(this),
       delete: this.deleteFile.bind(this),
@@ -43,6 +53,11 @@ class ApexxCloud {
       cancelMultipartUpload: this.cancelMultipartUpload.bind(this),
     };
 
+    /**
+     * Bucket operations
+     * @type {Object}
+     * @property {function(string, Object): Promise<Object>} listContents - List bucket contents
+     */
     this.bucket = {
       listContents: this.getBucketContents.bind(this),
     };
