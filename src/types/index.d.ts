@@ -29,7 +29,6 @@ declare module '@apexxcloud/sdk-node' {
   }
 
   interface UploadOptions {
-
     bucketName?: string;
     region?: string;
     visibility?: 'public' | 'private';
@@ -113,7 +112,11 @@ declare module '@apexxcloud/sdk-node' {
     constructor(config: BucketConfig);
 
     files: {
-      upload( key: string, file: Buffer | NodeJS.ReadStream, options: UploadOptions): Promise<{ url: string }>;
+      upload(
+        key: string,
+        file: Buffer | NodeJS.ReadStream,
+        options: UploadOptions
+      ): Promise<{ url: string }>;
       delete(key: string, options: DeleteOptions): Promise<{ success: boolean }>;
       purge(key: string, options: PurgeOptions): Promise<{ success: boolean }>;
 
