@@ -178,11 +178,11 @@ class ApexxCloud {
    * @returns {Promise<Object>} Upload response
    * @throws {Error} When required parameters are missing
    */
-  async uploadFile(fileData, options = {}) {
+  async uploadFile(key, fileData, options = {}) {
     if (!fileData) {
       throw new Error('fileData is required for upload operation');
     }
-    if (!options.key) {
+    if (!key) {
       throw new Error('key is required for upload operation');
     }
 
@@ -190,7 +190,7 @@ class ApexxCloud {
 
     // The field name MUST be "file" to match multer's expectations
     form.append('file', fileData, {
-      filename: options.filename || options.key,
+      filename: options.filename || key,
       contentType: options.contentType || 'application/octet-stream',
       knownLength: fileData.length, // Add the buffer length
     });
@@ -199,7 +199,7 @@ class ApexxCloud {
       bucket_name: options.bucketName || this.config.defaultBucket,
       region: options.region || this.config.region,
       visibility: options.visibility || 'public',
-      key: options.key,
+      key: key,
     });
 
     const path = `/api/v1/files/upload?${queryParams.toString()}`;
