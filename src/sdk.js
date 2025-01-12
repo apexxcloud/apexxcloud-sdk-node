@@ -334,7 +334,7 @@ class ApexxCloud {
     const form = new FormData();
 
     form.append('file', filePart, {
-      filename: options.key,
+      filename: key,
       contentType: options.mimeType || 'application/octet-stream',
       knownLength: filePart.length, // Add the buffer length
     });
