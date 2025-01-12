@@ -37,28 +37,51 @@ declare module '@apexxcloud/sdk-node' {
     contentType?: string;
   }
 
+  interface DeleteOptions {
+    bucketName?: string;
+    region?: string;
+  }
+
+  interface PurgeOptions {
+    bucketName?: string;
+    region?: string;
+  }
+
   interface MultipartUploadOptions {
     key: string;
     bucketName?: string;
+    region?: string;
     totalParts: number;
     mimeType?: string;
     visibility?: 'public' | 'private';
   }
 
   interface UploadPartOptions {
-    key: string;
+   
     bucketName?: string;
+    region?: string;
     totalParts: number;
-    filename?: string;
-    contentType?: string;
+    uploadId: string;
+    partNumber: number;
+    mimeType?: string;
+
   }
 
   interface CompleteMultipartOptions {
-    key: string;
     bucketName?: string;
+    region?: string;
+    uploadId: string;
+  }
+
+  interface CancelMultipartOptions {
+    bucketName?: string;
+    region?: string;
+    uploadId: string;
   }
 
   interface BucketContentsOptions {
+    bucketName?: string;
+    region?: string;
     prefix?: string;
     page?: number;
     limit?: number;
@@ -93,37 +116,36 @@ declare module '@apexxcloud/sdk-node' {
 
     files: {
       upload(file: Buffer | NodeJS.ReadStream, options: UploadOptions): Promise<{ url: string }>;
-      delete(bucketName: string, key: string): Promise<{ success: boolean }>;
-      getSignedUrl(
-        bucketName: string,
-        key: string,
-        options: { type: SignedUrlType; expiresIn?: number }
-      ): Promise<string>;
+      delete(key: string, options: DeleteOptions): Promise<{ success: boolean }>;
+      purge(key: string, options: PurgeOptions): Promise<{ success: boolean }>;
+     
       startMultipartUpload(
-        bucketName: string,
         key: string,
         options: MultipartUploadOptions
       ): Promise<{ uploadId: string }>;
       uploadPart(
-        uploadId: string,
-        partNumber: number,
+        key: string,
         filePart: Buffer | NodeJS.ReadStream,
         options: UploadPartOptions
       ): Promise<UploadPartResponse>;
       completeMultipartUpload(
-        uploadId: string,
+        key: string,
         parts: Array<UploadPartResponse>,
         options: CompleteMultipartOptions
       ): Promise<CompleteMultipartResponse>;
       cancelMultipartUpload(
-        uploadId: string,
-        options: CompleteMultipartOptions
+        key: string,
+        options: CancelMultipartOptions
       ): Promise<{ success: boolean }>;
+      getSignedUrl(
+        type: string,
+        options: SignedUrlOptions
+      ): Promise<string>;
     };
 
     bucket: {
       listContents(
-        bucketName: string,
+
         options?: BucketContentsOptions
       ): Promise<BucketContentsResponse>;
     };

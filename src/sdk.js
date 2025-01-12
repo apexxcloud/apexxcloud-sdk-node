@@ -43,6 +43,7 @@ class ApexxCloud {
      *     contentType?: string
      *   }) => Promise<{url: string}>,
      *   delete: (bucketName: string, key: string) => Promise<{success: boolean}>,
+     *   purge: (bucketName: string, key: string) => Promise<{message: string, purged_urls: string[]}>,
      *   getSignedUrl: (bucketName: string, key: string, options: {
      *     type: ('upload'|'delete'|'start-multipart'|'uploadpart'|'completemultipart'|'cancelmultipart'|'download'),
      *     expiresIn?: number
@@ -72,8 +73,8 @@ class ApexxCloud {
     this.files = {
       upload: this.uploadFile.bind(this),
       delete: this.deleteFile.bind(this),
-      getSignedUrl: (bucketName, key, options) =>
-        this.generateSignedUrl(options.type, { bucketName, key, ...options }),
+      purge: this.purgeFile.bind(this),
+      getSignedUrl: this.generateSignedUrl.bind(this),
       startMultipartUpload: this.startMultipartUpload.bind(this),
       uploadPart: this.uploadPart.bind(this),
       completeMultipartUpload: this.completeMultipartUpload.bind(this),
@@ -224,19 +225,21 @@ class ApexxCloud {
 
   /**
    * Deletes a file from ApexxCloud storage
-   * @param {string} bucketName - Bucket name
    * @param {string} key - Object key to delete
+   * @param {Object} options - Delete options
+   * @param {string} [options.bucketName] - Bucket name
+   * @param {string} [options.region] - Region
    * @returns {Promise<Object>} Deletion response
    * @throws {Error} When key is missing
    */
-  async deleteFile(bucketName, key) {
+  async deleteFile(key, options = {}) {
     if (!key) {
       throw new Error('key is required for delete operation');
     }
 
     const queryParams = new URLSearchParams({
-      bucket_name: bucketName || this.config.defaultBucket,
-      region: this.config.region,
+      bucket_name: options.bucketName || this.config.defaultBucket,
+      region: options.region || this.config.region,
       key: key,
     });
 
@@ -245,17 +248,42 @@ class ApexxCloud {
   }
 
   /**
+   * Purges a file from the CDN cache
+   * @param {string} key - Object key to purge
+   * @param {Object} options - Purge options
+   * @param {string} [options.bucketName] - Bucket name
+   * @param {string} [options.region] - Region
+   * @returns {Promise<Object>} Purge response
+   * @throws {Error} When key is missing
+   */
+  async purgeFile(key, options = {}) {
+    if (!key) {
+      throw new Error('key is required for purge operation');
+    }
+
+    const queryParams = new URLSearchParams({
+      bucket_name: options.bucketName || this.config.defaultBucket,
+      region: options.region || this.config.region,
+      key: key,
+    });
+
+    const path = `/api/v1/files/purge?${queryParams.toString()}`;
+    return this.makeRequest('POST', path);
+  }
+
+  /**
    * Initiates a multipart upload
-   * @param {string} bucketName - Bucket name
    * @param {string} key - Object key
    * @param {Object} options - Upload options
+   * @param {string} [options.bucketName] - Bucket name
+   * @param {string} [options.region] - Region
    * @param {number} options.totalParts - Total number of parts
    * @param {string} [options.mimeType="application/octet-stream"] - File MIME type
    * @param {string} [options.visibility="public"] - File visibility
    * @returns {Promise<Object>} Multipart upload initialization response
    * @throws {Error} When required parameters are missing
    */
-  async startMultipartUpload(bucketName, key, options = {}) {
+  async startMultipartUpload(key, options = {}) {
     if (!key) {
       throw new Error('key is required for multipart upload');
     }
@@ -263,8 +291,8 @@ class ApexxCloud {
       throw new Error('totalParts is required for multipart upload');
     }
     const queryParams = new URLSearchParams({
-      bucket_name: bucketName || this.config.defaultBucket,
-      region: this.config.region,
+      bucket_name: options.bucketName || this.config.defaultBucket,
+      region: options.region || this.config.region,
       key: key,
       mimeType: options.mimeType || 'application/octet-stream',
       visibility: options.visibility || 'public',
@@ -275,14 +303,28 @@ class ApexxCloud {
     return this.makeRequest('POST', path);
   }
 
-  async uploadPart(uploadId, partNumber, filePart, options = {}) {
-    if (!uploadId) {
+  /**
+   * Uploads a part of a multipart upload
+   * @param {string} key - Object key
+   * @param {Buffer|ReadStream} filePart - Part data
+   * @param {Object} options - Upload part options
+   * @param {string} [options.bucketName] - Bucket name
+   * @param {string} [options.region] - Region
+   * @param {number} [options.totalParts] - Total parts
+   * @param {string} [options.uploadId] - Upload ID
+   * @param {number} [options.partNumber] - Part number
+   * @param {string} [options.mimeType] - File MIME type
+   * @returns {Promise<Object>} Upload part response
+   * @throws {Error} When required parameters are missing
+   */
+  async uploadPart(key, filePart, options = {}) {
+    if (!options.uploadId) {
       throw new Error('uploadId is required for upload part');
     }
-    if (!partNumber) {
+    if (!options.partNumber) {
       throw new Error('partNumber is required for upload part');
     }
-    if (!options.key) {
+    if (!key) {
       throw new Error('key is required for upload part');
     }
     if (!options.totalParts) {
@@ -292,20 +334,20 @@ class ApexxCloud {
     const form = new FormData();
 
     form.append('file', filePart, {
-      filename: options.filename || options.key,
-      contentType: options.contentType || 'application/octet-stream',
+      filename: options.key,
+      contentType: options.mimeType || 'application/octet-stream',
       knownLength: filePart.length, // Add the buffer length
     });
 
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
-      region: this.config.region,
-      partNumber: partNumber,
-      key: options.key,
+      region: options.region || this.config.region,
+      partNumber: options.partNumber,
+      key: key,
       totalParts: options.totalParts,
     });
 
-    const path = `/api/v1/files/multipart/${uploadId}?${queryParams.toString()}`;
+    const path = `/api/v1/files/multipart/${options.uploadId}?${queryParams.toString()}`;
 
     return this.makeRequest('POST', path, {
       data: form,
@@ -313,61 +355,83 @@ class ApexxCloud {
     });
   }
 
-  async completeMultipartUpload(uploadId, parts, options = {}) {
-    if (!uploadId) {
+  /**
+   * Completes a multipart upload
+   * @param {string} key - Object key
+   * @param {Array<{ETag: string, PartNumber: number}>} parts - Array of parts
+   * @param {Object} options - Complete multipart upload options
+   * @param {string} [options.bucketName] - Bucket name
+   * @param {string} [options.region] - Region
+   * @param {string} [options.uploadId] - Upload ID
+   * @returns {Promise<Object>} Complete multipart upload response
+   * @throws {Error} When required parameters are missing
+   */
+  async completeMultipartUpload(key, parts, options = {}) {
+    if (!options.uploadId) {
       throw new Error('uploadId is required for complete multipart upload');
     }
     if (!Array.isArray(parts)) {
       throw new Error('parts must be an array of {ETag, PartNumber}');
     }
-    if (!options.key) {
+    if (!key) {
       throw new Error('key is required for complete multipart upload');
     }
 
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
-      region: this.config.region,
-      key: options.key,
+      region: options.region || this.config.region,
+      key: key,
     });
 
-    const path = `/api/v1/files/multipart/${uploadId}/complete?${queryParams.toString()}`;
+    const path = `/api/v1/files/multipart/${options.uploadId}/complete?${queryParams.toString()}`;
 
     return this.makeRequest('POST', path, {
       data: { parts },
     });
   }
 
-  async cancelMultipartUpload(uploadId, options = {}) {
-    if (!uploadId) {
+  /**
+   * Cancels a multipart upload
+   * @param {string} key - Object key
+   * @param {Object} options - Cancel multipart upload options
+   * @param {string} [options.bucketName] - Bucket name
+   * @param {string} [options.region] - Region
+   * @param {string} [options.uploadId] - Upload ID
+   * @returns {Promise<Object>} Cancel multipart upload response
+   * @throws {Error} When required parameters are missing
+   */
+  async cancelMultipartUpload(key, options = {}) {
+    if (!options.uploadId) {
       throw new Error('uploadId is required for cancel multipart upload');
     }
-    if (!options.key) {
+    if (!key) {
       throw new Error('key is required for cancel multipart upload');
     }
 
     const queryParams = new URLSearchParams({
       bucket_name: options.bucketName || this.config.defaultBucket,
-      region: this.config.region,
-      key: options.key,
+      region: options.region || this.config.region,
+      key: key,
     });
 
-    const path = `/api/v1/files/multipart/${uploadId}?${queryParams.toString()}`;
+    const path = `/api/v1/files/multipart/${options.uploadId}?${queryParams.toString()}`;
     return this.makeRequest('DELETE', path);
   }
 
   /**
    * Lists contents of a bucket
-   * @param {string} bucketName - Bucket name
    * @param {Object} [options] - Listing options
+   * @param {string} [options.bucketName] - Bucket name
+   * @param {string} [options.region] - Region
    * @param {string} [options.prefix=""] - Filter results by prefix
    * @param {number} [options.page=1] - Page number
    * @param {number} [options.limit=20] - Results per page
    * @returns {Promise<Object>} Bucket contents
    */
-  async getBucketContents(bucketName, options = {}) {
+  async getBucketContents(options = {}) {
     const queryParams = new URLSearchParams({
-      bucket_name: bucketName || this.config.defaultBucket,
-      region: this.config.region,
+      bucket_name: options.bucketName || this.config.defaultBucket,
+      region: options.region || this.config.region,
       prefix: options.prefix || '',
       page: options.page || 1,
       limit: options.limit || 20,
