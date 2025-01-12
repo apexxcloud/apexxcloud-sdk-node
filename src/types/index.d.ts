@@ -57,14 +57,12 @@ declare module '@apexxcloud/sdk-node' {
   }
 
   interface UploadPartOptions {
-   
     bucketName?: string;
     region?: string;
     totalParts: number;
     uploadId: string;
     partNumber: number;
     mimeType?: string;
-
   }
 
   interface CompleteMultipartOptions {
@@ -118,7 +116,7 @@ declare module '@apexxcloud/sdk-node' {
       upload(file: Buffer | NodeJS.ReadStream, options: UploadOptions): Promise<{ url: string }>;
       delete(key: string, options: DeleteOptions): Promise<{ success: boolean }>;
       purge(key: string, options: PurgeOptions): Promise<{ success: boolean }>;
-     
+
       startMultipartUpload(
         key: string,
         options: MultipartUploadOptions
@@ -137,17 +135,11 @@ declare module '@apexxcloud/sdk-node' {
         key: string,
         options: CancelMultipartOptions
       ): Promise<{ success: boolean }>;
-      getSignedUrl(
-        type: string,
-        options: SignedUrlOptions
-      ): Promise<string>;
+      getSignedUrl(type: string, options: SignedUrlOptions): Promise<string>;
     };
 
     bucket: {
-      listContents(
-
-        options?: BucketContentsOptions
-      ): Promise<BucketContentsResponse>;
+      listContents(options?: BucketContentsOptions): Promise<BucketContentsResponse>;
     };
 
     generateSignedUrl(type: SignedUrlType, options: SignedUrlOptions): Promise<string>;
